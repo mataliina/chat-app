@@ -3,8 +3,8 @@ import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import Grid from '@material-ui/core/Grid'
 
-const MessageInput = ({ setMessage }) => {
-	//const { setMessage } = props
+const MessageInput = (props) => {
+	const { setMessage } = props
 	const [inputValue, setInputValue] = useState('')
 
 	const handleClick = () => {

@@ -1,15 +1,28 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { io } from 'socket.io-client'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
-import { Container, Typography } from '@material-ui/core'
+import LoginDialog from './LoginDialog'
+import { Button } from '@material-ui/core'
 
-const Chat = () => {
+import { Container, Typography } from '@material-ui/core'
+import UserContext from './contexts/UserContext'
+
+const Chat = (props) => {
+	//const { registeredUsers } = useContext(UserContext)
+
 	const [socket, setSocket] = useState()
-	const [userId, setUserId] = useState('')
+	//const [userId, setUserId] = useState('')
 
 	const [message, setMessage] = useState('')
 	const [allMessages, setAllMessages] = useState([])
+	const [loggedUser, setLoggedUser] = useState({})
+
+	console.log('loggedUser,  ', loggedUser)
+
+	const handleLogout = () => {
+		setLoggedUser({})
+	}
 
 	useEffect(() => {
 		const newSocket = io('/')
@@ -19,43 +32,51 @@ const Chat = () => {
 
 	useEffect(() => {
 		if (socket) {
-			socket.on('your id', (id) => {
-				console.log('id: ', id)
-				setUserId(id)
-			})
+			// socket.on('your id', (id) => {
+			// 	console.log('id: ', id)
+			// 	setUserId(id)
+			// })
 			socket.on('chat message', (msg) => {
 				console.log('saapunut viesti: ', msg)
-				let newMessages = allMessages
-				newMessages.push(msg)
-				console.log('newMessages: ', newMessages)
-				setAllMessages(newMessages)
+
+				setAllMessages((allMessages) => [...allMessages, msg])
 			})
 		}
 	}, [socket])
 
 	useEffect(() => {
-		console.log('lähetetään: ', message)
-
 		if (message !== '') {
 			let msgObject = {
 				body: message,
-				userId: userId,
+				userId: loggedUser.uuid,
+				userName: loggedUser.name,
 			}
 			socket.emit('chat message', msgObject)
+			console.log('lähetetty viesti: ', msgObject)
 			setMessage('')
 		}
 	}, [message])
 
 	useEffect(() => {
-		console.log('allMessages efektistä: ', allMessages)
+		console.log('allMessages muuttui: ', allMessages)
 	}, [allMessages])
 
 	return (
 		<Container>
-			<Typography variant='h1'>Chat</Typography>
-			<MessageList allMessages={allMessages} userId={userId} />
+			{!loggedUser.uuid && <LoginDialog setLoggedUser={setLoggedUser} />}
+			{loggedUser.uuid && (
+				<>
+					<Button variant='outlined' onClick={handleLogout}>
+						Logout
+					</Button>
+					<Typography variant='h1'>Chat</Typography>
+					<Typography variant='h5'>{`User: ${loggedUser.name}`}</Typography>
 
-			<MessageInput setMessage={setMessage} />
+					<MessageList allMessages={allMessages} loggedUser={loggedUser} />
+
+					<MessageInput setMessage={setMessage} />
+				</>
+			)}
 		</Container>
 	)
 }

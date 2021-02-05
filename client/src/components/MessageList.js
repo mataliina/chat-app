@@ -1,18 +1,24 @@
-import React from 'react'
-import { Grid, Paper } from '@material-ui/core'
+import React, { useCallback, useContext } from 'react'
+import { Grid, Paper, Typography } from '@material-ui/core'
+import UserContext from './contexts/UserContext'
 
 const MessageList = (props) => {
-	const { allMessages, userId } = props
+	const { allMessages, loggedUser } = props
+	const { registeredUsers } = useContext(UserContext)
 
-	console.log('messages listissa ', allMessages)
+	const setRef = useCallback((msg) => {
+		if (msg) {
+			msg.scrollIntoView({ smooth: true })
+		}
+	}, [])
 
 	const mapMessages = (msgs) => {
-		console.log('mapataan')
 		if (msgs.length > 0) {
 			return msgs.map((msg, index) => {
-				if (msg.userId === userId) {
+				const lastMessage = msgs.length - 1 === index
+				if (msg.userId === loggedUser.uuid) {
 					return (
-						<Grid item>
+						<Grid item ref={lastMessage ? setRef : null}>
 							<Paper
 								variant='elevation'
 								style={{
@@ -30,7 +36,8 @@ const MessageList = (props) => {
 					)
 				}
 				return (
-					<Grid item>
+					<Grid item ref={lastMessage ? setRef : null}>
+						<Typography variant='caption'>{msg.userName}</Typography>
 						<Paper
 							variant='elevation'
 							style={{
@@ -47,7 +54,13 @@ const MessageList = (props) => {
 				)
 			})
 		}
-		return <li>Ei viestejä</li>
+		return (
+			<Grid item>
+				<Paper variant='elevation' style={{ backgroundColor: 'lavenderblush', padding: '10px', width: '50%' }}>
+					No messages
+				</Paper>
+			</Grid>
+		)
 	}
 
 	return (
